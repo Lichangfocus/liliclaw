@@ -1,0 +1,14 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "liliclaw",
+  "version": "0.1.0",
+  "identifier": "com.liliclaw.app",
+  "build": { "frontendDist": "http://localhost:8866" },
+  "app": {
+    "windows": [
+      { "title": "liliclaw · 数字员工", "url": "http://localhost:8866", "width": 1280, "height": 860 }
+    ],
+    "security": { "csp": null }
+  },
+  "bundle": { "active": true, "targets": ["dmg", "app"], "icon": ["icons/icon.png"] }
+}
