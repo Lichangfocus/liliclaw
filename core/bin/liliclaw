@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# liliclaw 命令行入口（薄壳，全部转发给 Python 层）
+#   liliclaw site [port]       启动本地站点（管理界面 + 工作台，默认 8866）
+#   liliclaw bell [--dry-run]  手动跑一次调度检查
+#   liliclaw run <运行名> [--quiet]  手动触发一次运行（LILICLAW_EMP 选员工）
+#   liliclaw engines           列出各内核可用性
+#   liliclaw install|uninstall 注册/注销常驻网关（launchd）
+set -uo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$HERE/../.." && pwd)"
+PLIST="$HOME/Library/LaunchAgents/com.liliclaw.bell.plist"
+
+case "${1:-site}" in
+  site)      exec python3 "$ROOT/server/server.py" "${2:-8866}" ;;
+  bell)      shift; exec python3 "$HERE/bell.py" "$@" ;;
+  run)       shift; exec python3 "$HERE/shift.py" "$@" ;;
+  engines)   for k in claude-code kimi pi codex gemini qwen opencode aider; do
+               printf "%-12s %s\n" "$k" "$(python3 "$HERE/engines.py" available "$k" 2>/dev/null || true)"
+             done ;;
+  install)   mkdir -p "$HOME/Library/LaunchAgents"
+             sed -e "s|{{ROOT}}|$ROOT|g" "$ROOT/core/launchd/com.liliclaw.bell.plist.template" > "$PLIST"
+             launchctl unload "$PLIST" 2>/dev/null || true
+             launchctl load "$PLIST" && echo "常驻网关已注册" ;;
+  uninstall) launchctl unload "$PLIST" 2>/dev/null || true; rm -f "$PLIST"; echo "常驻网关已注销" ;;
+  *)         grep '^#   ' "$0" | sed 's/^#   //' ;;
+esac
